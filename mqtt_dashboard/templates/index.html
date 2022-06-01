@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MIS MQTT Dashboard</title>
+    {# <link href="{{ url_for('static', path='/css/bootstrap4.1.3.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', path='/css/styles.css') }}" rel="stylesheet"> #}
+  </head>
+  <body style="text-align: center; margin: 30px;">
+    <button type="button" style="pointer: cursor; padding: 20px; background-color: {{ 'green' if (status=='on') else 'red' }};">Status: {{ status }}</button>
+    <table>
+      <thead>
+        <tr>
+          <td>Topic Name</td>
+          <td>Voltage</td>
+          <td>Device ID</td>
+          <td>Current</td>
+          <td>Power</td>
+          <td>Created At</td>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in sensor_data %}
+        <tr>
+          <td>{{ item.topic }}</td>
+          <td>{{ item.voltage }}</td>
+          <td>{{ item.device_id }}</td>
+          <td>{{ item.current }}</td>
+          <td>{{ item.power }}</td>
+          <td>{{ item.created_at }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </body>
+  <script>
+    setTimeout(function () {
+      window.location.reload(1);
+    }, 1000);
+  </script>
+</html>
