@@ -42,14 +42,16 @@ def on_message(mqtt_client, user_data, message):
     device_data = check_if_device_id_exists(device_id)
 
     data = ['0'] * 7
+    if device_data:
+        data[5] = device_data[6]
     if payload['data']:
         if payload['data'].get('switch_state'):
             data[5] = payload['data']['switch_state']
         else:
             data[0] = message.topic
             data[1] = device_id
-            data[2] = str(payload['data']['voltage']) if payload['data'].get('voltage') else device_data[2]
-            data[3] = str(payload['data']['current']) if payload['data'].get('current') else device_data[3]
+            data[2] = str(payload['data']['voltage']) if payload['data'].get('voltage') else data[2]
+            data[3] = str(payload['data']['current']) if payload['data'].get('current') else data[3]
             data[4] = str(payload['data']['power']) if payload['data'].get('power') else data[4]
             data[5] = str(device_data[5]) if device_data else data[5]
 
