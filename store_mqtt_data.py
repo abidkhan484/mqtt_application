@@ -41,26 +41,26 @@ def on_message(mqtt_client, user_data, message):
     device_id = payload['id']
     device_data = check_if_device_id_exists(device_id)
 
-    data = [None] * 7
+    data = ['0'] * 7
     if payload['data']:
         if payload['data'].get('switch_state'):
             data[5] = payload['data']['switch_state']
         else:
-            data[1] = message.topic
-            data[2] = payload['data']['voltage'] if payload['data'].get('voltage') else device_data[2]
-            data[3] = payload['data']['current'] if payload['data'].get('current') else device_data[3]
-            data[4] = payload['data']['power'] if payload['data'].get('power') else device_data[4]
-            data[5] = device_data[5]
+            data[0] = message.topic
+            data[1] = device_id
+            data[2] = str(payload['data']['voltage']) if payload['data'].get('voltage') else device_data[2]
+            data[3] = str(payload['data']['current']) if payload['data'].get('current') else device_data[3]
+            data[4] = str(payload['data']['power']) if payload['data'].get('power') else data[4]
+            data[5] = str(device_data[5]) if device_data else data[5]
 
     now = datetime.now()
-    device_data[6] = now.strftime("%m/%d/%Y, %H:%M:%S")
-    if not device_data:
-        sql = 'INSERT INTO sensors_data (topic, voltage, current, power, status, created_at) VALUES (?, ?, ?, ?, ?, ?)'
-    else:
-        data[0] = device_data[0]
-        sql = 'UPDATE TABLE sensors_data (topic, voltage, current, power, status, created_at) VALUES (?, ?, ?, ?, ?, ?)'
+    data[6] = now.strftime("%m/%d/%Y, %H:%M:%S")
+    filtered_data = '","'.join(data)
+    sql = f'INSERT INTO sensors_data (topic, device_id, voltage, current, power, status, created_at) VALUES ("{filtered_data}")'
+    # else:
+    #     sql = f'UPDATE TABLE sensors_data (topic, device_id, voltage, current, power, status, created_at) VALUES ("{filtered_data}") WHERE device_id = {device_id}'
     cursor = db_conn.cursor()
-    cursor.execute(sql, device_data)
+    cursor.execute(sql)
     db_conn.commit()
     cursor.close()
  
@@ -84,7 +84,7 @@ def main():
     cursor.close()
  
     mqtt_client = mqtt.Client(MQTT_CLIENT_ID)
-    mqtt_client.username_pw_set(MQTT_USER, MQTT_PASSWORD)
+    # mqtt_client.username_pw_set(MQTT_USER, MQTT_PASSWORD)
     mqtt_client.user_data_set({'db_conn': db_conn})
  
     mqtt_client.on_connect = on_connect
