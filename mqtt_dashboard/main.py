@@ -70,9 +70,6 @@ def read_data(request: Request, skip: int = 0, limit: int = 100, db: Session = D
     status = crud.get_the_last_status(db).status
     count = 0
     for item in data:
-        # if not count:
-        #     status = item.status
-        #     count += 1
 
         sensor_data.append({
             'topic': item.topic,
@@ -90,14 +87,20 @@ def read_data(request: Request, skip: int = 0, limit: int = 100, db: Session = D
 
 
 @app.get("/update-device-status")
-def update_device_status(request: Request):
-    status = crud.get_the_last_status(db).status
+def update_device_status(request: Request, db: Session = Depends(get_db)):
+    result = crud.get_the_last_status(db)
+    status = ''
+    if result:
+        status = crud.get_the_last_status(db).status
 
     if status == 'off':
-        switch_status_command = f'mosquitto_pub -m \'{"msg_id":2001,"id":"test123","data":{"switch_state":"on"}}\' -t "apptodev" -h 18.136.120.199 -u misl -p "Mirinfosys"'
+        updated_status = 'on'
     elif status == 'on':
-        switch_status_command = f'mosquitto_pub -m \'{"msg_id":2001,"id":"test123","data":{"switch_state":"off"}}\' -t "apptodev" -h 18.136.120.199 -u misl -p "Mirinfosys"'
+        updated_status = 'off'
 
+    switch_status_command = '''mosquitto_pub -m '{"msg_id":2001,"id":"testdev","data":{"switch_state":"'''+updated_status+'''"}}' -t "apptodev" -h 18.136.120.199 -u misl -P "Mirinfosys"'''
+
+    import os
     os.system(switch_status_command)
 
 # {"msg_id":1001,"id":"test123","data":{"switch_state":"off"}}
