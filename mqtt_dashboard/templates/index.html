@@ -9,7 +9,9 @@
     <link href="{{ url_for('static', path='/css/styles.css') }}" rel="stylesheet"> #}
   </head>
   <body style="text-align: center; margin: 30px;">
-    <button type="button" style="pointer: cursor; padding: 20px; background-color: {{ 'green' if (status=='on') else 'red' }};">Status: {{ status }}</button>
+    <form action="/update-device-status" method="get">
+      <button onclick="change_device_status()" type="button" style="pointer: cursor; padding: 20px; background-color: {{ 'green' if (status=='on') else 'red' }};">Status: {{ status }}</button>
+    </form>
     <table>
       <thead>
         <tr>

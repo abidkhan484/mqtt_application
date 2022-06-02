@@ -67,12 +67,12 @@ def read_data(request: Request, skip: int = 0, limit: int = 100, db: Session = D
     data = crud.get_payload_data(db, skip=skip, limit=limit)
 
     sensor_data = []
-    status = ""
+    status = crud.get_the_last_status(db).status
     count = 0
     for item in data:
-        if not count:
-            status = item.status
-            count += 1
+        # if not count:
+        #     status = item.status
+        #     count += 1
 
         sensor_data.append({
             'topic': item.topic,
@@ -89,9 +89,16 @@ def read_data(request: Request, skip: int = 0, limit: int = 100, db: Session = D
     )
 
 
-@app.post("/update-device-status")
+@app.get("/update-device-status")
 def update_device_status(request: Request):
-    pass
+    status = crud.get_the_last_status(db).status
+
+    if status == 'off':
+        switch_status_command = f'mosquitto_pub -m \'{"msg_id":2001,"id":"test123","data":{"switch_state":"on"}}\' -t "apptodev" -h 18.136.120.199 -u misl -p "Mirinfosys"'
+    elif status == 'on':
+        switch_status_command = f'mosquitto_pub -m \'{"msg_id":2001,"id":"test123","data":{"switch_state":"off"}}\' -t "apptodev" -h 18.136.120.199 -u misl -p "Mirinfosys"'
+
+    os.system(switch_status_command)
 
 # {"msg_id":1001,"id":"test123","data":{"switch_state":"off"}}
 # {"msg_id":1006,"id":"test123","data":{"voltage":2222,"current":3,"power":0}}
