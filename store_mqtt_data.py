@@ -4,7 +4,7 @@ import paho.mqtt.client as mqtt
 import sqlite3
 from time import time
 from json import loads
-from datetime import datetime
+from datetime import datetime, timedelta
 
  
 MQTT_HOST = '18.136.120.199'
@@ -50,12 +50,12 @@ def on_message(mqtt_client, user_data, message):
         if payload['data'].get('switch_state'):
             data[5] = payload['data']['switch_state']
         else:
-            data[2] = str(payload['data']['voltage']) if payload['data'].get('voltage') else data[2]
-            data[3] = str(payload['data']['current']) if payload['data'].get('current') else data[3]
+            data[2] = str(payload['data']['voltage']/10) if payload['data'].get('voltage') else data[2]/10
+            data[3] = str(payload['data']['current']/10) if payload['data'].get('current') else data[3]/10
             data[4] = str(payload['data']['power']) if payload['data'].get('power') else data[4]
             data[5] = str(device_data[6]) if device_data else data[5]
 
-    now = datetime.now()
+    now = datetime.now() + timedelta(hours=6)
     data[6] = now.strftime("%m/%d/%Y, %H:%M:%S")
     filtered_data = '","'.join(data)
     sql = f'INSERT INTO sensors_data (topic, device_id, voltage, current, power, status, created_at) VALUES ("{filtered_data}")'
@@ -86,7 +86,7 @@ def main():
     cursor.close()
  
     mqtt_client = mqtt.Client(MQTT_CLIENT_ID)
-    # mqtt_client.username_pw_set(MQTT_USER, MQTT_PASSWORD)
+    mqtt_client.username_pw_set(MQTT_USER, MQTT_PASSWORD)
     mqtt_client.user_data_set({'db_conn': db_conn})
  
     mqtt_client.on_connect = on_connect

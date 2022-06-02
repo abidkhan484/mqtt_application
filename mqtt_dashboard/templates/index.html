@@ -27,7 +27,7 @@
       <tbody>
         {% for item in sensor_data %}
         <tr>
-          <td>{{ item.topic }}</td>
+          <td style="{{ 'background-color: #17a2b8;' if (item.topic=='apptodev') else '' }}">{{ item.topic }}</td>
           <td>{{ item.voltage }}</td>
           <td>{{ item.device_id }}</td>
           <td>{{ item.current }}</td>
