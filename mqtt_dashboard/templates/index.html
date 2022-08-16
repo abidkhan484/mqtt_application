@@ -43,31 +43,11 @@
   </div>
   </body>
   <script>
-      (function() {
-      var httpRequest;
-      document.getElementById("ajaxButton").addEventListener('click', makeRequest);
-
-      function makeRequest() {
-        httpRequest = new XMLHttpRequest();
-
-        if (!httpRequest) {
-          alert('Giving up :( Cannot create an XMLHTTP instance');
-          return false;
-        }
-        httpRequest.onreadystatechange = alertContents;
-        httpRequest.open('GET', '/update-device-status');
-        httpRequest.send();
-      }
-
-      function alertContents() {
-        if (httpRequest.readyState === XMLHttpRequest.DONE) {
-          if (httpRequest.status === 200) {
-            console.log(httpRequest.responseText);
-          } else {
-            alert('There was a problem with the request.');
-          }
-        }
-      }
+    (function() {
+      const updateStatus = () => {
+        fetch("/api/update-device-status").then(res => res.json()).then(data => console.log(data));
+      };
+      document.getElementById('ajaxButton').addEventListener("click", updateStatus);
     })(); 
     setTimeout(function () {
       window.location.reload(1);

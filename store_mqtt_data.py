@@ -7,7 +7,7 @@ from json import loads
 from datetime import datetime, timedelta
 
  
-MQTT_HOST = '18.136.120.199'
+MQTT_HOST = '159.89.163.228'
 MQTT_PORT = 1883
 MQTT_CLIENT_ID = 'Python MQTT client'
 MQTT_USER = 'misl'

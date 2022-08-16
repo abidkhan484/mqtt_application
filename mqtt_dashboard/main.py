@@ -85,8 +85,35 @@ def read_data(request: Request, skip: int = 0, limit: int = 100, db: Session = D
         {"request": request, "sensor_data": sensor_data, "status": status},
     )
 
+@app.get("/api/get-data/{device_id}")
+def read_data(request: Request, skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    data = crud.get_payload_data(db, skip=skip, limit=limit)
 
-@app.get("/update-device-status")
+    sensor_data = []
+    status = crud.get_the_last_status(db).status
+    count = 0
+    for item in data:
+
+        sensor_data.append({
+            'topic': item.topic,
+            'device_id': item.device_id,
+            'voltage': item.voltage,
+            'current': item.current,
+            'power': item.power,
+            'created_at': item.created_at,
+        })
+    return {"status": status, "sensor_data": sensor_data}
+
+@app.get('/api/device-status/{device_id}')
+def device_current_status(request: Request, db: Session = Depends(get_db)):
+    result = crud.get_the_last_status(db)
+    status = ''
+    if result:
+        status = crud.get_the_last_status(db).status
+    return {"status": status}
+
+
+@app.get("/api/update-device-status")
 def update_device_status(request: Request, db: Session = Depends(get_db)):
     result = crud.get_the_last_status(db)
     status = ''
@@ -98,10 +125,13 @@ def update_device_status(request: Request, db: Session = Depends(get_db)):
     elif status == 'on':
         updated_status = 'off'
 
-    switch_status_command = '''mosquitto_pub -m '{"msg_id":2001,"id":"testdev","data":{"switch_state":"'''+updated_status+'''"}}' -t "apptodev" -h 18.136.120.199 -u misl -P "Mirinfosys"'''
+    switch_status_command = '''mosquitto_pub -m '{"msg_id":2001,"id":"testdev","data":{"switch_state":"'''+updated_status+'''"}}' -t "apptodev" -h 159.89.163.228 -u misl -P "Mirinfosys"'''
+
+    print(f'command is {switch_status_command}')
 
     import os
     os.system(switch_status_command)
+    return {"status": updated_status, "message":"Message published successfully."}
 
 # {"msg_id":1001,"id":"test123","data":{"switch_state":"off"}}
 # {"msg_id":1006,"id":"test123","data":{"voltage":2222,"current":3,"power":0}}
