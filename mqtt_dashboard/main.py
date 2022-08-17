@@ -64,10 +64,11 @@ logging.basicConfig(filename='db.log')
 
 @app.get("/")
 def read_data(request: Request, skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    data = crud.get_payload_data(db, skip=skip, limit=limit)
+    device_id = "testdev"
+    data = crud.get_payload_data(device_id, db, skip=skip, limit=limit)
 
     sensor_data = []
-    status = crud.get_the_last_status(db).status
+    status = crud.get_the_last_status(device_id, db).status
     count = 0
     for item in data:
 
@@ -85,12 +86,15 @@ def read_data(request: Request, skip: int = 0, limit: int = 100, db: Session = D
         {"request": request, "sensor_data": sensor_data, "status": status},
     )
 
-@app.get("/api/get-data/{device_id}")
-def read_data(request: Request, skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    data = crud.get_payload_data(db, skip=skip, limit=limit)
+@app.get("/api/device-data/{device_id}/get")
+def read_data(device_id, request: Request, skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    data = crud.get_payload_data(device_id, db, skip=skip, limit=limit)
 
     sensor_data = []
-    status = crud.get_the_last_status(db).status
+    status = ""
+    query_res = crud.get_the_last_status(device_id, db)
+    if query_res:
+        status = query_res.status
     count = 0
     for item in data:
 
@@ -104,21 +108,21 @@ def read_data(request: Request, skip: int = 0, limit: int = 100, db: Session = D
         })
     return {"status": status, "sensor_data": sensor_data}
 
-@app.get('/api/device-status/{device_id}')
-def device_current_status(request: Request, db: Session = Depends(get_db)):
-    result = crud.get_the_last_status(db)
+@app.get('/api/status/{device_id}/get')
+def device_current_status(device_id, request: Request, db: Session = Depends(get_db)):
+    result = crud.get_the_last_status(device_id, db)
     status = ''
     if result:
-        status = crud.get_the_last_status(db).status
+        status = result.status
     return {"status": status}
 
 
-@app.get("/api/update-device-status")
-def update_device_status(request: Request, db: Session = Depends(get_db)):
-    result = crud.get_the_last_status(db)
+@app.get("/api/status/{device_id}/update")
+def update_device_status(device_id, request: Request, db: Session = Depends(get_db)):
+    result = crud.get_the_last_status(device_id, db)
     status = ''
     if result:
-        status = crud.get_the_last_status(db).status
+        status = result.status
 
     if status == 'off':
         updated_status = 'on'
@@ -131,7 +135,18 @@ def update_device_status(request: Request, db: Session = Depends(get_db)):
 
     import os
     os.system(switch_status_command)
-    return {"status": updated_status, "message":"Message published successfully."}
+    return {"message":"Message published successfully."}
+
+@app.get("/api/hourly-data/{date}/{device_id}/get")
+def get_device_data_group_hourly(date, device_id, request: Request, db: Session = Depends(get_db)):
+    """
+    date: format MM-DD-YYYY (e.g 08-11-2022)\n
+    device_id: String (e.g testdev)
+    """
+    result = crud.get_device_data_group_hourly(device_id, date, db)
+    resp = dict((date.replace(",", ""), round(avg_voltage, 2)) for date, avg_voltage in result)
+    return resp
+
 
 # {"msg_id":1001,"id":"test123","data":{"switch_state":"off"}}
 # {"msg_id":1006,"id":"test123","data":{"voltage":2222,"current":3,"power":0}}
